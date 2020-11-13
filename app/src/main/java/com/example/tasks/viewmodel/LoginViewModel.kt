@@ -11,6 +11,7 @@ import com.example.tasks.service.listener.ValidationListener
 import com.example.tasks.service.repository.PersonRepository
 import com.example.tasks.service.repository.PriorityRepository
 import com.example.tasks.service.repository.local.SecurityPreferences
+import com.example.tasks.service.repository.remote.RetrofitClient
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -28,11 +29,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
      * Faz login usando API
      */
     fun doLogin(email: String, password: String) {
-        mPersonRepository.login(email, password, object : APIListener {
+        mPersonRepository.login(email, password, object : APIListener<HeaderModel> {
             override fun onSucess(model: HeaderModel) {
                 mSharedPreferences.store(TaskConstants.SHARED.TOKEN_KEY, model.token)
                 mSharedPreferences.store(TaskConstants.SHARED.PERSON_NAME, model.name)
                 mSharedPreferences.store(TaskConstants.SHARED.PERSON_KEY, model.personKey)
+
+                RetrofitClient.addHeader(model.token, model.personKey)
 
                 mLogin.value = ValidationListener()
             }
@@ -49,8 +52,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun verifyLoggedUser() {
 
-        val logged = (mSharedPreferences.get(TaskConstants.SHARED.TOKEN_KEY) != "" &&
-                mSharedPreferences.get(TaskConstants.SHARED.PERSON_KEY) != "")
+        val token = mSharedPreferences.get(TaskConstants.SHARED.TOKEN_KEY)
+        val personKey = mSharedPreferences.get(TaskConstants.SHARED.PERSON_KEY)
+
+        RetrofitClient.addHeader(token, personKey)
+
+        val logged = (token != "" && personKey != "")
 
         if (!logged) {
             mPriorityRepository.getAll()

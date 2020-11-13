@@ -16,7 +16,7 @@ class PersonRepository(val context: Context) {
     // Retrofit Instance
     private val mApi = RetrofitClient.createService(PersonService::class.java)
 
-    fun login(email: String, password: String, listener: APIListener) {
+    fun login(email: String, password: String, listener: APIListener<HeaderModel>) {
         val call: Call<HeaderModel> = mApi.Login(email, password)
 
         // Assincronos task
@@ -43,7 +43,7 @@ class PersonRepository(val context: Context) {
         })
     }
 
-    fun create(name: String, email: String, password: String, listener: APIListener) {
+    fun create(name: String, email: String, password: String, listener: APIListener<HeaderModel>) {
         val call: Call<HeaderModel> = mApi.Create(name, email, password, true)
 
         call.enqueue(object : Callback<HeaderModel> {
