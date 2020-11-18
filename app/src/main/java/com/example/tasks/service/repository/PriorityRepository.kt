@@ -39,5 +39,7 @@ class PriorityRepository(val context: Context) {
         })
     }
 
+    fun getDescriptionById(id: Int) = mPriorityDatabase.getDescription(id)
+
     fun listAll() = mPriorityDatabase.listPriorities()
 }

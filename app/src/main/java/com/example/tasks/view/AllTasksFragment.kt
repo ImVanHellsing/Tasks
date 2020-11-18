@@ -5,11 +5,10 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tasks.R
@@ -43,12 +42,15 @@ class AllTasksFragment : Fragment() {
             }
 
             override fun onDeleteClick(id: Int) {
+                mViewModel.onDelete(id)
             }
 
             override fun onCompleteClick(id: Int) {
+                mViewModel.onComplete(id)
             }
 
             override fun onUndoClick(id: Int) {
+                mViewModel.onUndo(id)
             }
         }
 
@@ -69,6 +71,15 @@ class AllTasksFragment : Fragment() {
         mViewModel.taskList.observe(viewLifecycleOwner, Observer {
             if (it.count() > 0) {
                 mAdapter.updateList(it)
+            }
+        })
+
+        mViewModel.validation.observe(viewLifecycleOwner, Observer {
+            if (it.sucess()) {
+                Toast.makeText(context, getString(R.string.task_removed), Toast.LENGTH_SHORT)
+                    .show()
+            } else {
+                Toast.makeText(context, it.failure(), Toast.LENGTH_SHORT).show()
             }
         })
     }

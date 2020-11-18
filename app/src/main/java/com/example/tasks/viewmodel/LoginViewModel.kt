@@ -15,9 +15,9 @@ import com.example.tasks.service.repository.remote.RetrofitClient
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
+    private val mSharedPreferences = SecurityPreferences(application)
     private val mPersonRepository = PersonRepository(application)
     private val mPriorityRepository = PriorityRepository(application)
-    private val mSharedPreferences = SecurityPreferences(application)
 
     private val mLogin = MutableLiveData<ValidationListener>()
     var login: LiveData<ValidationListener> = mLogin
@@ -35,7 +35,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 mSharedPreferences.store(TaskConstants.SHARED.PERSON_NAME, model.name)
                 mSharedPreferences.store(TaskConstants.SHARED.PERSON_KEY, model.personKey)
 
-                RetrofitClient.addHeader(model.token, model.personKey)
+                RetrofitClient.addHeaders(model.personKey, model.token)
 
                 mLogin.value = ValidationListener()
             }
@@ -52,18 +52,18 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun verifyLoggedUser() {
 
-        val token = mSharedPreferences.get(TaskConstants.SHARED.TOKEN_KEY)
         val personKey = mSharedPreferences.get(TaskConstants.SHARED.PERSON_KEY)
+        val tokenKey = mSharedPreferences.get(TaskConstants.SHARED.TOKEN_KEY)
 
-        RetrofitClient.addHeader(token, personKey)
 
-        val logged = (token != "" && personKey != "")
+        val logged = (tokenKey != "" && personKey != "")
+
+        RetrofitClient.addHeaders(personKey, tokenKey)
+
+        mLoggedUser.value = logged
 
         if (!logged) {
             mPriorityRepository.getAll()
         }
-
-        mLoggedUser.value = logged
     }
-
 }

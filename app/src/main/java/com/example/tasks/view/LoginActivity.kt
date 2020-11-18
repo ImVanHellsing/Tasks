@@ -59,13 +59,17 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         mViewModel.login.observe(this, Observer {
             if (it.sucess()) {
                 startActivity(Intent(this, MainActivity::class.java))
+                finish()
             } else {
                 Toast.makeText(this, it.failure(), Toast.LENGTH_LONG).show()
             }
         })
 
         mViewModel.loggedUser.observe(this, Observer {
-            if (it) startActivity(Intent(this, MainActivity::class.java))
+            if (it) {
+                startActivity(Intent(this, MainActivity::class.java))
+                finish()
+            }
         })
     }
 
@@ -78,5 +82,4 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
         mViewModel.doLogin(email, password)
     }
-
 }

@@ -19,19 +19,12 @@ class TaskRepository(val context: Context) {
     // Retrofit Instance
     private val mApi = RetrofitClient.createService(TaskService::class.java)
 
-    fun create(newTask: TaskModel, listener: APIListener<Boolean>) {
+    fun getOne(taskId: Int, listener: APIListener<TaskModel>) {
+        val call: Call<TaskModel> = mApi.getOne(taskId)
 
-        val call: Call<Boolean> = mApi.store(
-            newTask.priorityId,
-            newTask.description,
-            newTask.dueDate,
-            newTask.complete
-        )
-
-        call.enqueue(object : Callback<Boolean> {
-            override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+        call.enqueue(object : Callback<TaskModel> {
+            override fun onResponse(call: Call<TaskModel>, response: Response<TaskModel>) {
                 if (response.code() != TaskConstants.HTTP.SUCCESS) {
-                    // Sending the converted JSON to string as answer to 'onFailure' method
                     listener.onFailure(
                         Gson().fromJson(
                             response.errorBody()!!.string(),
@@ -43,7 +36,7 @@ class TaskRepository(val context: Context) {
                 }
             }
 
-            override fun onFailure(call: Call<Boolean>, t: Throwable) {
+            override fun onFailure(call: Call<TaskModel>, t: Throwable) {
                 listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
             }
         })
@@ -54,24 +47,99 @@ class TaskRepository(val context: Context) {
         listBehavior(call, listener)
     }
 
-    fun getNextWeek(listener: APIListener<List<TaskModel>>) {
+    fun nextWeek(listener: APIListener<List<TaskModel>>) {
         val call: Call<List<TaskModel>> = mApi.nextWeek()
         listBehavior(call, listener)
     }
 
-    fun getOverdue(listener: APIListener<List<TaskModel>>) {
+    fun overdue(listener: APIListener<List<TaskModel>>) {
         val call: Call<List<TaskModel>> = mApi.overdue()
         listBehavior(call, listener)
     }
 
+    fun delete(id: Int, listener: APIListener<Boolean>) {
+        val call: Call<Boolean> = mApi.delete(id)
+
+        call.enqueue(object : Callback<Boolean> {
+            override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+                if (response.code() != TaskConstants.HTTP.SUCCESS) {
+                    listener.onFailure(
+                        Gson().fromJson(
+                            response.errorBody()!!.string(),
+                            String::class.java
+                        )
+                    )
+                } else response.body()?.let { listener.onSucess(it) }
+            }
+
+            override fun onFailure(call: Call<Boolean>, t: Throwable) {
+                listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
+            }
+
+        })
+    }
+
+    fun onUpdateStatus(id: Int, complete: Boolean, listener: APIListener<Boolean>) {
+
+        // Manage task by Id
+        val call = if (complete) mApi.complete(id) else mApi.undo(id)
+
+        call.enqueue(object : Callback<Boolean> {
+            override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+                if (response.code() != TaskConstants.HTTP.SUCCESS) {
+                    listener.onFailure(
+                        Gson().fromJson(
+                            response.errorBody()!!.string(),
+                            String::class.java
+                        )
+                    )
+                } else response.body()?.let { listener.onSucess(it) }
+            }
+
+            override fun onFailure(call: Call<Boolean>, t: Throwable) {
+                listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
+            }
+        })
+    }
+
+    fun create(task: TaskModel, listener: APIListener<Boolean>) {
+
+        val call: Call<Boolean> = mApi.create(
+            task.priorityId,
+            task.description,
+            task.dueDate,
+            task.complete
+        )
+
+        onCreteBehavior(call, listener)
+    }
+
+    fun update(task: TaskModel, listener: APIListener<Boolean>) {
+
+        val call: Call<Boolean> = mApi.update(
+            task.id,
+            task.priorityId,
+            task.description,
+            task.dueDate,
+            task.complete
+        )
+
+        onCreteBehavior(call, listener)
+    }
+
     private fun listBehavior(call: Call<List<TaskModel>>, listener: APIListener<List<TaskModel>>) {
+
         call.enqueue(object : Callback<List<TaskModel>> {
+            override fun onFailure(call: Call<List<TaskModel>>, t: Throwable) {
+                listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
+            }
+
             override fun onResponse(
                 call: Call<List<TaskModel>>,
                 response: Response<List<TaskModel>>
             ) {
-                if (response.code() != TaskConstants.HTTP.SUCCESS) {
-                    // Sending the converted JSON to string as answer to 'onFailure' method
+                val code = response.code()
+                if (code != TaskConstants.HTTP.SUCCESS) {
                     listener.onFailure(
                         Gson().fromJson(
                             response.errorBody()!!.string(),
@@ -82,9 +150,24 @@ class TaskRepository(val context: Context) {
                     response.body()?.let { listener.onSucess(it) }
                 }
             }
+        })
+    }
 
-            override fun onFailure(call: Call<List<TaskModel>>, t: Throwable) {
+    private fun onCreteBehavior(call: Call<Boolean>, listener: APIListener<Boolean>) {
+        call.enqueue(object : Callback<Boolean> {
+            override fun onFailure(call: Call<Boolean>, t: Throwable) {
                 listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
+            }
+
+            override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
+                if (response.code() != TaskConstants.HTTP.SUCCESS) {
+                    listener.onFailure(
+                        Gson().fromJson(
+                            response.errorBody()!!.string(),
+                            String::class.java
+                        )
+                    )
+                } else response.body()?.let { listener.onSucess(it) }
             }
         })
     }

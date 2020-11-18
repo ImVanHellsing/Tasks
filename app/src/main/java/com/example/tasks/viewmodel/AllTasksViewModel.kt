@@ -17,6 +17,9 @@ class AllTasksViewModel(application: Application) : AndroidViewModel(application
     private val mTaskList = MutableLiveData<List<TaskModel>>()
     var taskList: LiveData<List<TaskModel>> = mTaskList
 
+    private val mValidation = MutableLiveData<ValidationListener>()
+    var validation: LiveData<ValidationListener> = mValidation
+
     fun list() {
         mTaskRepository.getAll(object : APIListener<List<TaskModel>> {
             override fun onSucess(model: List<TaskModel>) {
@@ -27,5 +30,39 @@ class AllTasksViewModel(application: Application) : AndroidViewModel(application
                 mTaskList.value = arrayListOf()
             }
         })
+    }
+
+    fun onDelete(id: Int) {
+        mTaskRepository.delete(id, object : APIListener<Boolean> {
+            override fun onSucess(model: Boolean) {
+                list()
+                mValidation.value = ValidationListener()
+            }
+
+            override fun onFailure(msg: String) {
+                mValidation.value = ValidationListener(msg)
+                println("Ocorreu uma falha ao tentar deletar a sua tarefa!")
+            }
+
+        })
+    }
+
+    private fun updateStatus(id: Int, complete: Boolean) {
+        mTaskRepository.onUpdateStatus(id, complete, object : APIListener<Boolean> {
+            override fun onSucess(model: Boolean) {
+                list()
+            }
+
+            override fun onFailure(msg: String) {}
+
+        })
+    }
+
+    fun onUndo(id: Int) {
+        updateStatus(id, false)
+    }
+
+    fun onComplete(id: Int) {
+        updateStatus(id, true)
     }
 }

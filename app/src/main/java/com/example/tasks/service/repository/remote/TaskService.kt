@@ -11,18 +11,18 @@ interface TaskService {
     @GET("Task")
     fun getAll(): Call<List<TaskModel>>
 
-    @GET("Task/Next7Days")
-    fun nextWeek(): Call<List<TaskModel>>
-
     @GET("Task/Overdue")
     fun overdue(): Call<List<TaskModel>>
+
+    @GET("Task/Next7Days")
+    fun nextWeek(): Call<List<TaskModel>>
 
     @GET("Task/{id}")
     fun getOne(@Path(value = "id", encoded = true) id: Int): Call<TaskModel>
 
     @POST("Task")
     @FormUrlEncoded
-    fun store(
+    fun create(
         @Field("PriorityId") priorityId: Int,
         @Field("Description") description: String,
         @Field("DueDate") dueDate: String,

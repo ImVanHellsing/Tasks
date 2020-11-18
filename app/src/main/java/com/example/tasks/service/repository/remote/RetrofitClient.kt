@@ -7,19 +7,18 @@ import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class RetrofitClient private constructor() {
+class RetrofitClient {
 
-    // Singleton
     companion object {
+
         private lateinit var retrofit: Retrofit
-        private val baseUrl = "http://devmasterteam.com/CursoAndroidAPI/"
+        private const val BASE_URL = "http://devmasterteam.com/CursoAndroidAPI/"
         private var personKey: String = ""
         private var tokenKey: String = ""
 
         private fun getRetrofitInstance(): Retrofit {
-            // Client
-            val httpClient = OkHttpClient.Builder()
 
+            val httpClient = OkHttpClient.Builder()
             httpClient.addInterceptor(object : Interceptor {
                 override fun intercept(chain: Interceptor.Chain): Response {
                     val request =
@@ -32,10 +31,9 @@ class RetrofitClient private constructor() {
                 }
             })
 
-            // Initialization
             if (!Companion::retrofit.isInitialized) {
                 retrofit = Retrofit.Builder()
-                    .baseUrl(baseUrl)
+                    .baseUrl(BASE_URL)
                     .client(httpClient.build())
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
@@ -43,12 +41,12 @@ class RetrofitClient private constructor() {
             return retrofit
         }
 
-        fun addHeader(person: String, token: String) {
+        fun addHeaders(person: String, token: String) {
             personKey = person
             tokenKey = token
         }
 
-        fun <T> createService(serviceClass: Class<T>): T {
+        fun <S> createService(serviceClass: Class<S>): S {
             return getRetrofitInstance().create(serviceClass)
         }
     }
