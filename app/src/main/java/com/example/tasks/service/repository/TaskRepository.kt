@@ -14,12 +14,18 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.lang.Exception
 
-class TaskRepository(val context: Context) {
+class TaskRepository(val context: Context) : BaseRepository(context) {
 
     // Retrofit Instance
     private val mApi = RetrofitClient.createService(TaskService::class.java)
 
     fun getOne(taskId: Int, listener: APIListener<TaskModel>) {
+
+        if (!isConnectionAvailable(context)) {
+            listener.onFailure(context.getString(R.string.ERROR_INTERNET_CONNECTION))
+            return
+        }
+
         val call: Call<TaskModel> = mApi.getOne(taskId)
 
         call.enqueue(object : Callback<TaskModel> {
@@ -58,6 +64,12 @@ class TaskRepository(val context: Context) {
     }
 
     fun delete(id: Int, listener: APIListener<Boolean>) {
+
+        if (!isConnectionAvailable(context)) {
+            listener.onFailure(context.getString(R.string.ERROR_INTERNET_CONNECTION))
+            return
+        }
+
         val call: Call<Boolean> = mApi.delete(id)
 
         call.enqueue(object : Callback<Boolean> {
@@ -80,6 +92,11 @@ class TaskRepository(val context: Context) {
     }
 
     fun onUpdateStatus(id: Int, complete: Boolean, listener: APIListener<Boolean>) {
+
+        if (!isConnectionAvailable(context)) {
+            listener.onFailure(context.getString(R.string.ERROR_INTERNET_CONNECTION))
+            return
+        }
 
         // Manage task by Id
         val call = if (complete) mApi.complete(id) else mApi.undo(id)
@@ -111,7 +128,7 @@ class TaskRepository(val context: Context) {
             task.complete
         )
 
-        onCreteBehavior(call, listener)
+        onCreateBehavior(call, listener)
     }
 
     fun update(task: TaskModel, listener: APIListener<Boolean>) {
@@ -124,10 +141,15 @@ class TaskRepository(val context: Context) {
             task.complete
         )
 
-        onCreteBehavior(call, listener)
+        onCreateBehavior(call, listener)
     }
 
     private fun listBehavior(call: Call<List<TaskModel>>, listener: APIListener<List<TaskModel>>) {
+
+        if (!isConnectionAvailable(context)) {
+            listener.onFailure(context.getString(R.string.ERROR_INTERNET_CONNECTION))
+            return
+        }
 
         call.enqueue(object : Callback<List<TaskModel>> {
             override fun onFailure(call: Call<List<TaskModel>>, t: Throwable) {
@@ -153,7 +175,13 @@ class TaskRepository(val context: Context) {
         })
     }
 
-    private fun onCreteBehavior(call: Call<Boolean>, listener: APIListener<Boolean>) {
+    private fun onCreateBehavior(call: Call<Boolean>, listener: APIListener<Boolean>) {
+
+        if (!isConnectionAvailable(context)) {
+            listener.onFailure(context.getString(R.string.ERROR_INTERNET_CONNECTION))
+            return
+        }
+
         call.enqueue(object : Callback<Boolean> {
             override fun onFailure(call: Call<Boolean>, t: Throwable) {
                 listener.onFailure(context.getString(R.string.ERROR_UNEXPECTED))
